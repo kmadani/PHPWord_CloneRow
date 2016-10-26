@@ -93,6 +93,8 @@ class PHPWord_Template {
 		$this->_objZip->open($this->_tempFileName);
 
 		$this->_documentXML = $this->_objZip->getFromName('word/document.xml');
+		
+		$this->doc = new DOMDocument();
 	}
 
 	/**
@@ -165,10 +167,10 @@ class PHPWord_Template {
 		}
 		if ($numberOfClones > 0) {
 			// read document as XML
-			$xml = DOMDocument::loadXML($this->_documentXML, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
+			$xml = $this->doc->loadXML($this->_documentXML, LIBXML_NOENT | LIBXML_XINCLUDE | LIBXML_NOERROR | LIBXML_NOWARNING);
 
 			// search for tables
-			$tables = $xml->getElementsByTagName('tbl');
+			$tables = $this->doc->getElementsByTagName('tbl');
 			foreach ($tables as $table) {
 				$text = $table->textContent;
 				// search for pattern. Like {TBL1.
@@ -180,7 +182,7 @@ class PHPWord_Template {
 					$isFind = false;
 					foreach ($rows as $row) {
 						$text = $row->textContent;
-						$TextWithTags = $xml->saveXML($row);
+						$TextWithTags = $this->doc->saveXML($row);
 						if (
 							mb_strpos($text, '{'.$search.'.') !== false // Pattern found in this row
 							OR
@@ -207,7 +209,7 @@ class PHPWord_Template {
 				}
 			}
 			// save document
-			$res_string = $xml->saveXML();
+			$res_string = $this->doc->saveXML();
 			$this->_documentXML = $res_string;
 	
 			// parsing data
